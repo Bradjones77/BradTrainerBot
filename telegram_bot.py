@@ -3,6 +3,7 @@ from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 from config import TELEGRAM_TOKEN, COINS
 from signal_generator import run_signals
 import asyncio
+import time
 
 # Emoji mapping for signals
 SIGNAL_DISPLAY = {
@@ -29,7 +30,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # /signalcrypto command
 async def signalcrypto(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    signals = run_signals(COINS)
+    signals = run_signals(COINS)  # Pass the main coin list
     messages = []
     for coin, data in signals.items():
         if "error" in data:
@@ -44,13 +45,14 @@ async def signalcrypto(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 f"Likelihood: 📊 {data['probability']}%\n"
                 "────────────────────────"
             )
+        time.sleep(0.5)  # Slight delay to avoid API rate limits
     await update.message.reply_text("\n".join(messages))
 
 # /signals command for meme coins
-MEME_COINS = ['DOGE', 'SHIB', 'APE', 'PEPE']
+MEME_COINS = ['DOGE', 'SHIB', 'APE', 'PEPE']  # You can expand this list
 
 async def signals(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    signals = run_signals(MEME_COINS)
+    signals = run_signals(MEME_COINS)  # Pass meme coin list
     messages = []
     for coin, data in signals.items():
         if "error" in data:
@@ -65,20 +67,20 @@ async def signals(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 f"Likelihood: 📊 {data['probability']}%\n"
                 "────────────────────────"
             )
+        time.sleep(0.5)
     await update.message.reply_text("\n".join(messages))
 
-# Build application
+# Build the bot application
 app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("help", help_command))
 app.add_handler(CommandHandler("signalcrypto", signalcrypto))
 app.add_handler(CommandHandler("signals", signals))
 
-# Async function to start bot safely
+# Async function to safely start the bot
 async def main():
-    await app.bot.delete_webhook()  # Remove webhook to avoid conflicts
+    await app.bot.delete_webhook()  # Remove any webhook to prevent conflicts
     await app.run_polling()
 
 if __name__ == "__main__":
-    import asyncio
     asyncio.run(main())
