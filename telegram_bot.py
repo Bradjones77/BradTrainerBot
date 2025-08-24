@@ -1,12 +1,10 @@
-from telegram import Update, Bot
+from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
-from data_fetcher import fetch_cmc_ohlcv, fetch_cmc_data
-from analysis import compute_indicators, generate_signal
 from config import TELEGRAM_TOKEN, COINS
+from signal_generator import run_signals
 import asyncio
-import time
 
-# Emoji-enhanced signals
+# Emoji mapping for signals
 SIGNAL_DISPLAY = {
     "BUY": "🚀🟢⬆️ **BUY** 🚀",
     "SELL": "💥🔴⬇️ **SELL** 💥",
@@ -15,7 +13,9 @@ SIGNAL_DISPLAY = {
 
 # /start command
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Welcome! I am your Crypto Signal Bot. Use /help to see commands.")
+    await update.message.reply_text(
+        "Welcome! I am your Crypto Signal Bot. Use /help to see commands."
+    )
 
 # /help command
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -29,61 +29,46 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # /signalcrypto command
 async def signalcrypto(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    signals = run_signals(COINS)
     messages = []
-    for coin in COINS:
-        try:
-            df = fetch_cmc_ohlcv(symbol=coin)
-            df = compute_indicators(df)
-            cmc_data = fetch_cmc_data(symbol=coin)
-            signal_data = generate_signal(df, cmc_data)
-
-            signal_display = SIGNAL_DISPLAY.get(signal_data['signal'], "❔ UNKNOWN")
-
+    for coin, data in signals.items():
+        if "error" in data:
+            messages.append(f"{coin}: ❌ Error fetching signal ({data['error']})")
+        else:
+            signal_text = SIGNAL_DISPLAY.get(data["signal"], "❔ UNKNOWN")
             messages.append(
                 f"💎 {coin} 💎\n"
-                f"Signal: {signal_display}\n"
-                f"Price: 💰 {signal_data['current_price']:.2f} USDT\n"
-                f"Stop-loss: 🛑 {signal_data['stop_loss']:.2f} USDT\n"
-                f"Likelihood: 📊 {signal_data['probability']}%\n"
+                f"Signal: {signal_text}\n"
+                f"Price: 💰 {data['current_price']:.2f} USDT\n"
+                f"Stop-loss: 🛑 {data['stop_loss']:.2f} USDT\n"
+                f"Likelihood: 📊 {data['probability']}%\n"
                 "────────────────────────"
             )
-        except Exception as e:
-            messages.append(f"{coin}: ❌ Error fetching signal ({e})")
-        time.sleep(1)
-    await update.message.reply_text('\n'.join(messages))
+    await update.message.reply_text("\n".join(messages))
 
 # /signals command for meme coins
 MEME_COINS = ['DOGE', 'SHIB', 'APE', 'PEPE']
 
 async def signals(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    signals = run_signals(MEME_COINS)
     messages = []
-    for coin in MEME_COINS:
-        try:
-            df = fetch_cmc_ohlcv(symbol=coin)
-            df = compute_indicators(df)
-            cmc_data = fetch_cmc_data(symbol=coin)
-            signal_data = generate_signal(df, cmc_data)
-
-            signal_display = SIGNAL_DISPLAY.get(signal_data['signal'], "❔ UNKNOWN")
-
+    for coin, data in signals.items():
+        if "error" in data:
+            messages.append(f"{coin}: ❌ Error fetching signal ({data['error']})")
+        else:
+            signal_text = SIGNAL_DISPLAY.get(data["signal"], "❔ UNKNOWN")
             messages.append(
                 f"💎 {coin} 💎\n"
-                f"Signal: {signal_display}\n"
-                f"Price: 💰 {signal_data['current_price']:.2f} USDT\n"
-                f"Stop-loss: 🛑 {signal_data['stop_loss']:.2f} USDT\n"
-                f"Likelihood: 📊 {signal_data['probability']}%\n"
+                f"Signal: {signal_text}\n"
+                f"Price: 💰 {data['current_price']:.2f} USDT\n"
+                f"Stop-loss: 🛑 {data['stop_loss']:.2f} USDT\n"
+                f"Likelihood: 📊 {data['probability']}%\n"
                 "────────────────────────"
             )
-        except Exception as e:
-            messages.append(f"{coin}: ❌ Error fetching signal ({e})")
-        time.sleep(1)
-    await update.message.reply_text('\n'.join(messages))
+    await update.message.reply_text("\n".join(messages))
 
-
-# Create bot and app
+# Build application
 app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
-
-# Add handlers
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("help", help_command))
 app.add_handler(CommandHandler("signalcrypto", signalcrypto))
@@ -91,11 +76,9 @@ app.add_handler(CommandHandler("signals", signals))
 
 # Async function to start bot safely
 async def main():
-    # Delete webhook before polling to avoid conflicts
-    await app.bot.delete_webhook()
-    # Start polling
+    await app.bot.delete_webhook()  # Remove webhook to avoid conflicts
     await app.run_polling()
 
-# Run the bot
 if __name__ == "__main__":
+    import asyncio
     asyncio.run(main())
