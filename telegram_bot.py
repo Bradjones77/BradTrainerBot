@@ -1,9 +1,13 @@
-from telegram import Update
+from telegram import Update, Bot
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 from data_fetcher import fetch_cmc_ohlcv, fetch_cmc_data
 from analysis import compute_indicators, generate_signal
 from config import TELEGRAM_TOKEN, COINS
 import time
+
+# Delete any existing webhook to prevent conflicts
+bot = Bot(token=TELEGRAM_TOKEN)
+bot.delete_webhook()  # This clears any webhook set previously
 
 # Emoji-enhanced signals
 SIGNAL_DISPLAY = {
@@ -51,7 +55,7 @@ async def signalcrypto(update: Update, context: ContextTypes.DEFAULT_TYPE):
         time.sleep(1)
     await update.message.reply_text('\n'.join(messages))
 
-# /signals command for meme coins (same style)
+# /signals command for meme coins
 MEME_COINS = ['DOGE', 'SHIB', 'APE', 'PEPE']
 
 async def signals(update: Update, context: ContextTypes.DEFAULT_TYPE):
