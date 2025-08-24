@@ -1,32 +1,41 @@
-from data_fetcher import fetch_cmc_ohlcv, fetch_cmc_data
-from analysis import compute_indicators, generate_signal
-import time
+from data_fetcher import fetch_cmc_data
 
 def run_signals(coins):
     """
-    Generate signals for a list of coins and return as a dictionary.
+    Returns signals for each coin:
+    {
+        "DOGE": {"signal": "BUY", "current_price": 0.06, "stop_loss": 0.055, "probability": 75},
+        "SHIB": {"error": "No data returned"}
+    }
     """
     signals = {}
-    for coin in coins:
-        try:
-            # Fetch market data
-            df = fetch_cmc_ohlcv(symbol=coin)
-            df = compute_indicators(df)
-            cmc_data = fetch_cmc_data(symbol=coin)
+    data = fetch_cmc_data(coins)
+    
+    for coin, coin_data in data.items():
+        if "error" in coin_data:
+            signals[coin] = {"error": coin_data["error"]}
+            continue
 
-            # Generate signal
-            signal_data = generate_signal(df, cmc_data)
+        price = coin_data["current_price"]
 
-            signals[coin] = {
-                "signal": signal_data["signal"],
-                "current_price": signal_data["current_price"],
-                "stop_loss": signal_data["stop_loss"],
-                "probability": signal_data["probability"]
-            }
+        # Simple example: dummy signal logic
+        if price < 0.1:
+            signal = "BUY"
+            stop_loss = price * 0.9
+            probability = 70
+        elif price > 100:
+            signal = "SELL"
+            stop_loss = price * 0.95
+            probability = 80
+        else:
+            signal = "HOLD"
+            stop_loss = price * 0.97
+            probability = 60
 
-        except Exception as e:
-            signals[coin] = {"error": str(e)}
-
-        time.sleep(1)  # Avoid API rate limits
-
+        signals[coin] = {
+            "signal": signal,
+            "current_price": price,
+            "stop_loss": stop_loss,
+            "probability": probability
+        }
     return signals
