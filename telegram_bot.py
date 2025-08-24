@@ -1,23 +1,22 @@
+# telegram_bot.py
+
 import asyncio
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 from config import TELEGRAM_TOKEN, COINS, MEME_COINS
 from signal_generator import run_signals
 
-# Emoji mapping for signals
 SIGNAL_DISPLAY = {
     "BUY": "🚀🟢⬆️ **BUY** 🚀",
     "SELL": "💥🔴⬇️ **SELL** 💥",
     "HOLD": "⏸️🟡⚖️ **HOLD** ⏸️"
 }
 
-# /start command
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "Welcome! I am your Crypto Signal Bot. Use /help to see commands."
     )
 
-# /help command
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "Available commands:\n"
@@ -27,9 +26,8 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "/signals - Get signals for all meme coins"
     )
 
-# /signalcrypto command for main coins
 async def signalcrypto(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    signals = run_signals(COINS)  # ✅ pass main coin list
+    signals = run_signals(COINS)
     messages = []
     for idx, (coin, data) in enumerate(signals.items(), start=1):
         if "error" in data:
@@ -49,9 +47,8 @@ async def signalcrypto(update: Update, context: ContextTypes.DEFAULT_TYPE):
             messages = []
             await asyncio.sleep(1)
 
-# /signals command for meme coins
 async def signals(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    signals_data = run_signals(MEME_COINS)  # ✅ pass meme coin list
+    signals_data = run_signals(MEME_COINS)
     messages = []
     for idx, (coin, data) in enumerate(signals_data.items(), start=1):
         if "error" in data:
@@ -71,16 +68,14 @@ async def signals(update: Update, context: ContextTypes.DEFAULT_TYPE):
             messages = []
             await asyncio.sleep(1)
 
-# Build the bot
 app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("help", help_command))
 app.add_handler(CommandHandler("signalcrypto", signalcrypto))
 app.add_handler(CommandHandler("signals", signals))
 
-# Start bot safely
 async def main():
-    await app.bot.delete_webhook()  # remove webhook conflicts
+    await app.bot.delete_webhook()
     await app.run_polling()
 
 if __name__ == "__main__":
