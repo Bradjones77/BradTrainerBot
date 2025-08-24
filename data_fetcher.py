@@ -1,3 +1,5 @@
+# data_fetcher.py
+
 import requests
 from config import CMC_API_KEY
 
@@ -9,7 +11,7 @@ def fetch_cmc_data(coins):
         "X-CMC_PRO_API_KEY": CMC_API_KEY,
     }
 
-    coin_list = ",".join(coins)  # e.g., "BTC,ETH,DOGE"
+    coin_list = ",".join(coins)
     params = {"symbol": coin_list, "convert": "USD"}
 
     response = requests.get(CMC_API_URL, headers=headers, params=params)
