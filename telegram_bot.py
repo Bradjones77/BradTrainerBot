@@ -1,7 +1,7 @@
 import asyncio
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
-from config import TELEGRAM_TOKEN, COINS  # COINS = main coins
+from config import TELEGRAM_TOKEN, COINS, MEME_COINS
 from signal_generator import run_signals
 
 # Emoji mapping for signals
@@ -10,12 +10,6 @@ SIGNAL_DISPLAY = {
     "SELL": "💥🔴⬇️ **SELL** 💥",
     "HOLD": "⏸️🟡⚖️ **HOLD** ⏸️"
 }
-
-# List of meme coins
-MEME_COINS = [
-    'DOGE', 'SHIB', 'APE', 'PEPE', 'MANA', 'CHZ', 'SAND', 'LUNA', 'LUNA2', 'XVS', 'CAKE'
-    # Add more as needed
-]
 
 # /start command
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
