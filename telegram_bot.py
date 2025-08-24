@@ -1,5 +1,4 @@
 import asyncio
-import time
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 from config import TELEGRAM_TOKEN, COINS  # COINS = main coins
@@ -12,21 +11,10 @@ SIGNAL_DISPLAY = {
     "HOLD": "⏸️🟡⚖️ **HOLD** ⏸️"
 }
 
-# List of all meme coins
+# List of meme coins
 MEME_COINS = [
-    'BTC','ETH','USDT','BNB','XRP','ADA','DOGE','MATIC','SOL','DOT','SHIB','LTC','TRX','AVAX',
-    'UNI','CRO','NEAR','FTM','ATOM','ALGO','LINK','XLM','BCH','VET','ICP','FIL','EGLD','APE',
-    'EOS','THETA','HBAR','SAND','GRT','CHZ','KSM','STX','QNT','CFX','ZIL','ENJ','BAT','DCR',
-    'NEO','1INCH','FLOW','LRC','ZRX','RUNE','CELO','AR','KAVA','MANA','UMA','REV','KNC','HNT',
-    'OKB','CRV','MINA','AUDIO','OCEAN','LPT','ANKR','GLM','CVX','BAL','SRM','IOST','SKL','SXP',
-    'XTZ','IOTA','XEM','QTUM','FTT','WAXP','MKR','DGB','HIVE','OGN','STORJ','LUNA','RSR','AMP',
-    'XCH','SC','NANO','GNO','ZEN','ARDR','OXT','REQ','REN','ICX','COTI','NKN','DENT','STMX','FRONT',
-    'AKRO','LSK','CKB','PUNDIX','CVC','ONT','LOOM','FET','POLY','TWT','RAY','MASK','API3','FXS',
-    'SPELL','MTL','KEEP','DODO','PERP','SUSHI','BTRST','KP3R','TRIBE','RLC','WOO','XVS','CAKE',
-    'ALPHA','TORN','AAVE','COMP','SNX','YFI','BAL','CRV','REN','ZRX','CEL','BAND','STORJ','ANT',
-    'MANA','CHZ','OGN','GRT','BAT','KNC','DGB','HBAR','LRC','ENJ','NEO','IOST','FTT','KAVA','RUNE',
-    'CELO','HNT','OKB','MKR','LPT','AUDIO','OCEAN','GLM','CVX','ANKR','AR','THETA','SAND','FTM',
-    'ALGO','ATOM','AVAX','TRX','LTC','SOL','MATIC','DOGE','ADA','XRP','BNB','ETH','BTC'
+    'DOGE', 'SHIB', 'APE', 'PEPE', 'MANA', 'CHZ', 'SAND', 'LUNA', 'LUNA2', 'XVS', 'CAKE'
+    # Add more as needed
 ]
 
 # /start command
@@ -47,7 +35,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # /signalcrypto command for main coins
 async def signalcrypto(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    signals = run_signals(COINS)  # pass main coin list
+    signals = run_signals(COINS)  # ✅ pass main coin list
     messages = []
     for idx, (coin, data) in enumerate(signals.items(), start=1):
         if "error" in data:
@@ -57,20 +45,19 @@ async def signalcrypto(update: Update, context: ContextTypes.DEFAULT_TYPE):
             messages.append(
                 f"💎 {coin} 💎\n"
                 f"Signal: {signal_text}\n"
-                f"Price: 💰 {data['current_price']:.2f} USDT\n"
-                f"Stop-loss: 🛑 {data['stop_loss']:.2f} USDT\n"
+                f"Price: 💰 {data['current_price']:.4f} USDT\n"
+                f"Stop-loss: 🛑 {data['stop_loss']:.4f} USDT\n"
                 f"Likelihood: 📊 {data['probability']}%\n"
                 "────────────────────────"
             )
-        # Send batch every 10 coins
-        if idx % 10 == 0 or idx == len(signals):
+        if idx % 5 == 0 or idx == len(signals):
             await update.message.reply_text("\n".join(messages))
             messages = []
             await asyncio.sleep(1)
 
-# /signals command for all meme coins
+# /signals command for meme coins
 async def signals(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    signals_data = run_signals(MEME_COINS)
+    signals_data = run_signals(MEME_COINS)  # ✅ pass meme coin list
     messages = []
     for idx, (coin, data) in enumerate(signals_data.items(), start=1):
         if "error" in data:
@@ -80,13 +67,12 @@ async def signals(update: Update, context: ContextTypes.DEFAULT_TYPE):
             messages.append(
                 f"💎 {coin} 💎\n"
                 f"Signal: {signal_text}\n"
-                f"Price: 💰 {data['current_price']:.2f} USDT\n"
-                f"Stop-loss: 🛑 {data['stop_loss']:.2f} USDT\n"
+                f"Price: 💰 {data['current_price']:.4f} USDT\n"
+                f"Stop-loss: 🛑 {data['stop_loss']:.4f} USDT\n"
                 f"Likelihood: 📊 {data['probability']}%\n"
                 "────────────────────────"
             )
-        # Send batch every 10 coins
-        if idx % 10 == 0 or idx == len(signals_data):
+        if idx % 5 == 0 or idx == len(signals_data):
             await update.message.reply_text("\n".join(messages))
             messages = []
             await asyncio.sleep(1)
