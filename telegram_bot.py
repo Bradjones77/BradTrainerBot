@@ -3,11 +3,8 @@ from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 from data_fetcher import fetch_cmc_ohlcv, fetch_cmc_data
 from analysis import compute_indicators, generate_signal
 from config import TELEGRAM_TOKEN, COINS
+import asyncio
 import time
-
-# Delete any existing webhook to prevent conflicts
-bot = Bot(token=TELEGRAM_TOKEN)
-bot.delete_webhook()  # This clears any webhook set previously
 
 # Emoji-enhanced signals
 SIGNAL_DISPLAY = {
@@ -82,12 +79,23 @@ async def signals(update: Update, context: ContextTypes.DEFAULT_TYPE):
         time.sleep(1)
     await update.message.reply_text('\n'.join(messages))
 
-# Build application
+
+# Create bot and app
 app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
+
+# Add handlers
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("help", help_command))
 app.add_handler(CommandHandler("signalcrypto", signalcrypto))
 app.add_handler(CommandHandler("signals", signals))
 
-# Run bot
-app.run_polling()
+# Async function to start bot safely
+async def main():
+    # Delete webhook before polling to avoid conflicts
+    await app.bot.delete_webhook()
+    # Start polling
+    await app.run_polling()
+
+# Run the bot
+if __name__ == "__main__":
+    asyncio.run(main())
